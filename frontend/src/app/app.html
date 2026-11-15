@@ -1,0 +1,87 @@
+<header class="top">
+  <h1>DeployLab</h1>
+  <p>Project dashboard</p>
+</header>
+
+<main>
+  @if (error()) {
+    <div class="alert" role="alert">
+      <span>{{ error() }}</span>
+      <button type="button" class="link" (click)="load()">Retry</button>
+    </div>
+  }
+
+  <section class="panel">
+    <h2>New project</h2>
+    <form (ngSubmit)="add()" class="form">
+      <label>
+        Name
+        <input name="name" [(ngModel)]="name" required maxlength="100" placeholder="Website redesign" />
+      </label>
+      <label class="grow">
+        Description
+        <input name="description" [(ngModel)]="description" maxlength="500" placeholder="What is this project about?" />
+      </label>
+      <label>
+        Status
+        <select name="status" [(ngModel)]="status">
+          @for (s of statuses; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
+      <button type="submit" class="primary" [disabled]="!name.trim()">Add project</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="list-head">
+      <h2>Projects</h2>
+      <div class="filters" role="group" aria-label="Filter by status">
+        @for (f of ['All', 'Active', 'Completed', 'Archived']; track f) {
+          <button type="button" [class.on]="filter() === f" (click)="filter.set($any(f))">
+            {{ f }} <span class="count">{{ $any(counts())[f] }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (loading()) {
+      <p class="empty">Loading projects…</p>
+    } @else if (visibleProjects().length === 0) {
+      <p class="empty">
+        @if (projects().length === 0) {
+          No projects yet. Add your first one above.
+        } @else {
+          No {{ filter().toLowerCase() }} projects.
+        }
+      </p>
+    } @else {
+      <ul class="projects">
+        @for (p of visibleProjects(); track p.id) {
+          <li>
+            <div class="info">
+              <strong>{{ p.name }}</strong>
+              @if (p.description) {
+                <span class="desc">{{ p.description }}</span>
+              }
+              <span class="date">Created {{ p.createdAt | date: 'd MMM y, h:mm a' }}</span>
+            </div>
+            <select
+              class="badge"
+              [class]="'badge ' + p.status.toLowerCase()"
+              [ngModel]="p.status"
+              (ngModelChange)="changeStatus(p, $event)"
+              [attr.aria-label]="'Status of ' + p.name"
+            >
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+            <button type="button" class="danger" (click)="remove(p)" [attr.aria-label]="'Delete ' + p.name">Delete</button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</main>
